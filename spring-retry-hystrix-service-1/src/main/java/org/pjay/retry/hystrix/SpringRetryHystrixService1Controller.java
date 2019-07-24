@@ -77,7 +77,8 @@ public class SpringRetryHystrixService1Controller {
 			@HystrixProperty(name = HYSTRIX_EXECUTION_TIMEOUT_IN_MILLISECONDS, value = HYSTRIX_TIMEOUT_VALUE) })
 	*/
 	// @formatter:on
-	@HystrixCommand(fallbackMethod = "testHystrixCBFallback", commandKey = "testHystrixCB")
+	// @HystrixCommand(fallbackMethod = "testHystrixCBFallback", commandKey = "testHystrixCB")
+	@HystrixCommand(fallbackMethod = "testHystrixCBFallback")
 	public ResponseEntity<Result> testHystrixCircuitBreaker(@PathVariable long timeOutMilliSec) {
 		Map<String, String> params = new HashMap<String, String>();
 		if (timeOutMilliSec < 0) {
