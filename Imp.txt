@@ -1,3 +1,13 @@
 https://spring.io/blog/2016/10/27/spring-tips-circuit-breakers
 https://www.youtube.com/watch?v=Kc7dDxn9cUg
 https://spring.io/blog/2019/04/24/spring-tips-spring-cloud-circuit-breaker
+https://www.slideshare.net/brother2402/circuit-breakers-2
+
+https://github.com/Netflix/Hystrix/wiki/Configuration
+https://github.com/Netflix/Hystrix/wiki/Configuration#execution.isolation.thread.timeoutInMilliseconds
+https://github.com/department-of-veterans-affairs/ascent-platform/wiki/DEV-:-Ascent-Hystrix-Pattern
+https://dzone.com/articles/microservices-part-4-spring-cloud-circuit-breaker
+https://stackoverflow.com/questions/35140136/hystrixcommand-annotation-what-is-purpose-of-commandkey
+https://github.com/Netflix/Hystrix/tree/master/hystrix-contrib/hystrix-javanica
+https://www.baeldung.com/spring-cloud-bootstrapping
+https://stackoverflow.com/questions/32997352/what-is-the-difference-between-putting-a-property-on-application-yml-or-bootstra
