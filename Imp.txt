@@ -1,0 +1,3 @@
+https://spring.io/blog/2016/10/27/spring-tips-circuit-breakers
+https://www.youtube.com/watch?v=Kc7dDxn9cUg
+https://spring.io/blog/2019/04/24/spring-tips-spring-cloud-circuit-breaker
