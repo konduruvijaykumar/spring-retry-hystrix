@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  */
 @RestController
-public class SpringRetryHystrixController {
+public class SpringRetryHystrixService1Controller {
 	
 	@GetMapping(value = {"/", "/home", "/hello"})
 	public String hello() {
