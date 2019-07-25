@@ -15,6 +15,7 @@ public class ApplicationConstants {
 	public static final String URL_SERVICE2_EXCEPTION = API_HOST_URL + "service2-exception";
 	public static final String URL_SERVICE2_RANDOM_EXCEPTION = API_HOST_URL + "service2-random-exception";
 	public static final String URL_SERVICE2_NO_API = API_HOST_URL + "service2-no-api";
+	public static final String URL_UNKNOWN_HOST_API = "http://unknownhost/api/hello";
 	public static final String HYSTRIX_EXECUTION_TIMEOUT_IN_MILLISECONDS = "execution.isolation.thread.timeoutInMilliseconds";
 	public static final String HYSTRIX_TIMEOUT_VALUE = "10000";
 	
