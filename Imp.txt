@@ -11,6 +11,8 @@ https://stackoverflow.com/questions/35140136/hystrixcommand-annotation-what-is-p
 https://github.com/Netflix/Hystrix/tree/master/hystrix-contrib/hystrix-javanica
 https://www.baeldung.com/spring-cloud-bootstrapping
 https://stackoverflow.com/questions/32997352/what-is-the-difference-between-putting-a-property-on-application-yml-or-bootstra
+https://stackoverflow.com/questions/45943715/how-to-configure-delay-time-in-spring-retry-spring-boot
+https://www.baeldung.com/spring-retry
 
 https://github.com/Netflix/Hystrix/wiki/Configuration#circuitBreaker.errorThresholdPercentage
 https://github.com/Netflix/Hystrix/wiki/Configuration#circuitBreaker.sleepWindowInMilliseconds
