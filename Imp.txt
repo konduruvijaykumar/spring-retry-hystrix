@@ -20,3 +20,7 @@ https://www.ebayinc.com/stories/blogs/tech/application-resiliency-using-netflix-
 https://github.com/Netflix/Hystrix/wiki/Configuration#circuitBreaker.errorThresholdPercentage
 https://github.com/Netflix/Hystrix/wiki/Configuration#circuitBreaker.sleepWindowInMilliseconds
 https://github.com/Netflix/Hystrix/wiki/Configuration#circuitBreaker.requestVolumeThreshold
+
+https://github.com/spring-cloud/spring-cloud-netflix/issues/2785
+https://stackoverflow.com/questions/40447916/unable-to-get-hystrix-stream-in-spring-cloud
+https://stackoverflow.com/questions/48431547/how-to-enable-hystrix-stream-in-spring-boot-2-0?rq=1
