@@ -3,6 +3,10 @@
  */
 package org.pjay.retry.hystrix;
 
+import static org.pjay.retry.hystrix.ApplicationConstants.URL_SERVICE2_EXCEPTION;
+import static org.pjay.retry.hystrix.ApplicationConstants.URL_SERVICE2_NO_API;
+import static org.pjay.retry.hystrix.ApplicationConstants.URL_SERVICE2_RANDOM_EXCEPTION;
+import static org.pjay.retry.hystrix.ApplicationConstants.URL_SERVICE2_SUCCESS;
 import static org.pjay.retry.hystrix.ApplicationConstants.URL_SERVICE2_TIMEOUT;
 import static org.pjay.retry.hystrix.ApplicationConstants.URL_UNKNOWN_HOST_API;
 
@@ -72,8 +76,19 @@ public class SpringRetryHystrixService1Controller {
 			Exception.class }, maxAttempts = 2, backoff = @Backoff(delay = 2000))
 	public ResponseEntity<Result> retryWithNoServiceRunning() {
 		log.info(" ## Start retryWithNoServiceRunning() ## ");
+		Result result = null;
 		log.info(" ## End retryWithNoServiceRunning() but resttemplate call processing ## ");
-		return null;
+		ResponseEntity<Result> responseEntity = customRestTemplate.exchange(URL_SERVICE2_SUCCESS, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				});
+		if (null != responseEntity && null != responseEntity.getBody()) {
+			result = responseEntity.getBody();
+			result.setMessage("Response returned from external service-2. Please stop service-2 and test this API");
+		} else {
+			result = new Result();
+			result.setMessage("No idea on how did i reach this block. This issue needs to be fixed");
+		}
+		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
 
 	@GetMapping("retry-no-service-api")
@@ -82,7 +97,9 @@ public class SpringRetryHystrixService1Controller {
 	public ResponseEntity<Result> retryWithNoServiceAPI() {
 		log.info(" ## Start retryWithNoServiceAPI() ## ");
 		log.info(" ## End retryWithNoServiceAPI() but resttemplate call processing ## ");
-		return null;
+		return customRestTemplate.exchange(URL_SERVICE2_NO_API, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				});
 	}
 
 	@GetMapping("retry-timeout-service/{timeOutMilliSec}")
@@ -90,8 +107,16 @@ public class SpringRetryHystrixService1Controller {
 			Exception.class }, maxAttempts = 2, backoff = @Backoff(delay = 2000))
 	public ResponseEntity<Result> retryWithTiemoutService(@PathVariable long timeOutMilliSec) {
 		log.info(" ## Start retryWithTiemoutService(@PathVariable long timeOutMilliSec) ## ");
-		log.info(" ## End retryWithTiemoutService(@PathVariable long timeOutMilliSec) but resttemplate call processing ## ");
-		return null;
+		Map<String, String> params = new HashMap<String, String>();
+		if (timeOutMilliSec < 0) {
+			throw new RuntimeException("Time out value should be positive number");
+		}
+		params.put("timeOutMilliSec", (new Long(timeOutMilliSec)).toString());
+		log.info(
+				" ## End retryWithTiemoutService(@PathVariable long timeOutMilliSec) but resttemplate call processing ## ");
+		return customRestTemplate.exchange(URL_SERVICE2_TIMEOUT, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				}, params);
 	}
 
 	@GetMapping("retry-unknown-host")
@@ -101,6 +126,28 @@ public class SpringRetryHystrixService1Controller {
 		log.info(" ## Start retryWithUnknownHost() ## ");
 		log.info(" ## End retryWithUnknownHost() but resttemplate call processing ## ");
 		return customRestTemplate.exchange(URL_UNKNOWN_HOST_API, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				});
+	}
+
+	@GetMapping("retry-random-exception")
+	@Retryable(value = { ResourceAccessException.class, RestClientResponseException.class,
+			Exception.class }, maxAttempts = 2, backoff = @Backoff(delay = 2000))
+	public ResponseEntity<Result> retryWithRandomException() {
+		log.info(" ## Start retryWithRandomException() ## ");
+		log.info(" ## End retryWithRandomException() but resttemplate call processing ## ");
+		return customRestTemplate.exchange(URL_SERVICE2_RANDOM_EXCEPTION, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				});
+	}
+
+	@GetMapping("retry-exception")
+	@Retryable(value = { ResourceAccessException.class, RestClientResponseException.class,
+			Exception.class }, maxAttempts = 2, backoff = @Backoff(delay = 2000))
+	public ResponseEntity<Result> retryWithException() {
+		log.info(" ## Start retryWithException() ## ");
+		log.info(" ## End retryWithException() but resttemplate call processing ## ");
+		return customRestTemplate.exchange(URL_SERVICE2_EXCEPTION, HttpMethod.GET, null,
 				new ParameterizedTypeReference<Result>() {
 				});
 	}
@@ -115,7 +162,8 @@ public class SpringRetryHystrixService1Controller {
 			throw new RuntimeException("Time out value should be positive number");
 		}
 		params.put("timeOutMilliSec", (new Long(timeOutMilliSec)).toString());
-		log.info(" ## End retryWithRestTemplate(@PathVariable long timeOutMilliSec) but resttemplate call processing ## ");
+		log.info(
+				" ## End retryWithRestTemplate(@PathVariable long timeOutMilliSec) but resttemplate call processing ## ");
 		return restTemplate.exchange(URL_SERVICE2_TIMEOUT, HttpMethod.GET, null,
 				new ParameterizedTypeReference<Result>() {
 				}, params);
@@ -179,7 +227,8 @@ public class SpringRetryHystrixService1Controller {
 			throw new RuntimeException("Time out value should be positive number");
 		}
 		params.put("timeOutMilliSec", (new Long(timeOutMilliSec)).toString());
-		log.info(" ## End testCustomRestTemplate(@PathVariable long timeOutMilliSec) but resttemplate call processing ## ");
+		log.info(
+				" ## End testCustomRestTemplate(@PathVariable long timeOutMilliSec) but resttemplate call processing ## ");
 		return customRestTemplate.exchange(URL_SERVICE2_TIMEOUT, HttpMethod.GET, null,
 				new ParameterizedTypeReference<Result>() {
 				}, params);
@@ -210,7 +259,8 @@ public class SpringRetryHystrixService1Controller {
 			throw new RuntimeException("Time out value should be positive number");
 		}
 		params.put("timeOutMilliSec", (new Long(timeOutMilliSec)).toString());
-		log.info(" ## End testHystrixCircuitBreaker(@PathVariable long timeOutMilliSec) but resttemplate call processing ## ");
+		log.info(
+				" ## End testHystrixCircuitBreaker(@PathVariable long timeOutMilliSec) but resttemplate call processing ## ");
 		return restTemplate.exchange(URL_SERVICE2_TIMEOUT, HttpMethod.GET, null,
 				new ParameterizedTypeReference<Result>() {
 				}, params);
