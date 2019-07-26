@@ -23,6 +23,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.CircuitBreaker;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -79,6 +80,26 @@ public class SpringRetryHystrixService1Controller {
 		Result result = null;
 		log.info(" ## End retryWithNoServiceRunning() but resttemplate call processing ## ");
 		ResponseEntity<Result> responseEntity = customRestTemplate.exchange(URL_SERVICE2_SUCCESS, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				});
+		if (null != responseEntity && null != responseEntity.getBody()) {
+			result = responseEntity.getBody();
+			result.setMessage("Response returned from external service-2. Please stop service-2 and test this API");
+		} else {
+			result = new Result();
+			result.setMessage("No idea on how did i reach this block. This issue needs to be fixed");
+		}
+		return new ResponseEntity<>(result, HttpStatus.OK);
+	}
+
+	@GetMapping("cb-service-not-running")
+	@CircuitBreaker(value = { ResourceAccessException.class, RestClientResponseException.class,
+			Exception.class }, maxAttempts = 2, resetTimeout = 8000)
+	public ResponseEntity<Result> cbWithNoServiceRunning() {
+		log.info(" ## Start cbWithNoServiceRunning() ## ");
+		Result result = null;
+		log.info(" ## End cbWithNoServiceRunning() but resttemplate call processing ## ");
+		ResponseEntity<Result> responseEntity = restTemplate.exchange(URL_SERVICE2_SUCCESS, HttpMethod.GET, null,
 				new ParameterizedTypeReference<Result>() {
 				});
 		if (null != responseEntity && null != responseEntity.getBody()) {
