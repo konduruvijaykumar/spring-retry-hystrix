@@ -71,6 +71,10 @@ public class SpringRetryHystrixService1Controller {
 	 * the next backoff delay (default 0 = ignored) - See example below. If delay =
 	 * 1000, maxAttempts = 3 and multiplier = 2. Then 1st attempt delay = 1000, 2nd
 	 * = (1000 * 2) is 2000, 3rd = (2000 * 2) is 4000
+	 * 
+	 * value or include attribute: is not provided (excludes attribute: is also
+	 * empty) then retry is done for all exceptions. If any specific exceptions are
+	 * mentioned then that exceptions are only retried
 	 */
 	@GetMapping("retry-service-not-running")
 	@Retryable(value = { ResourceAccessException.class, RestClientResponseException.class,

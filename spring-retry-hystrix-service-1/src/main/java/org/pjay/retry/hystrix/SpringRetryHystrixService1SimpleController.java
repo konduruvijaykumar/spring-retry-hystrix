@@ -27,4 +27,14 @@ public class SpringRetryHystrixService1SimpleController {
 		return springRetryHystrixService1SimpleService.getHystrixIntService();
 	}
 
+	@GetMapping("/simple-retry-getint")
+	public int retryGetInt() throws Exception {
+		return springRetryHystrixService1SimpleService.getRetryIntService();
+	}
+	
+	@GetMapping("/simple-retry-cb-getint")
+	public int retryCircuitBreakerGetInt() throws Exception {
+		return springRetryHystrixService1SimpleService.getRetryCircuitBrreakerIntService();
+	}
+
 }
