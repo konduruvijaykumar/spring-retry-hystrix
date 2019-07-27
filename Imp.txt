@@ -24,3 +24,5 @@ https://github.com/Netflix/Hystrix/wiki/Configuration#circuitBreaker.requestVolu
 https://github.com/spring-cloud/spring-cloud-netflix/issues/2785
 https://stackoverflow.com/questions/40447916/unable-to-get-hystrix-stream-in-spring-cloud
 https://stackoverflow.com/questions/48431547/how-to-enable-hystrix-stream-in-spring-boot-2-0?rq=1
+https://hmh.engineering/applying-circuit-breaker-within-hmh-413933deae
+https://github.com/BHRother/spring-circuit-breaker-example/blob/master/src/main/groovy/com/bhrother/github/services/ExternalSystemService.groovy
