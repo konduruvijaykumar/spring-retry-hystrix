@@ -74,6 +74,11 @@ public class SpringRetryHystrixService1SimpleService {
 	 * preventing access to the downstream component.
 	 */
 	// Same recover method above will be reused by @CircuitBreaker also
+	/*
+	 * Note: Circuit Breaker is directly calling recover method directly in case of
+	 * exception, due to this no retry is happening. Need to verify this.
+	 */
+	// https://stackoverflow.com/questions/57229742/spring-retry-circuit-breaker-moves-to-recover-code-without-any-retry-attempt-in
 	@CircuitBreaker(include = { Exception.class }, maxAttempts = 2)
 	public int getRetryCircuitBrreakerIntService() throws Exception {
 		log.info(" ## getRetryCircuitBrreakerIntService() ##");
