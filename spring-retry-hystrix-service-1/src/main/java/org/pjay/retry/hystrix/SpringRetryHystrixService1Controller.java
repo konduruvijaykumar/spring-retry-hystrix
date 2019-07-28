@@ -82,7 +82,6 @@ public class SpringRetryHystrixService1Controller {
 	public ResponseEntity<Result> retryWithNoServiceRunning() {
 		log.info(" ## Start retryWithNoServiceRunning() ## ");
 		Result result = null;
-		log.info(" ## End retryWithNoServiceRunning() but resttemplate call processing ## ");
 		ResponseEntity<Result> responseEntity = customRestTemplate.exchange(URL_SERVICE2_SUCCESS, HttpMethod.GET, null,
 				new ParameterizedTypeReference<Result>() {
 				});
@@ -93,16 +92,41 @@ public class SpringRetryHystrixService1Controller {
 			result = new Result();
 			result.setMessage("No idea on how did i reach this block. This issue needs to be fixed");
 		}
+		log.info(" ## End retryWithNoServiceRunning() ## ");
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
 
+	/*
+	 * My understanding on @CircuitBreaker annotation
+	 * 
+	 * CircuitBreaker will not do a retry in case of exception, it will directly go
+	 * to Recover block.
+	 * 
+	 * CircuitBreaker is itself annotated with @Retryable(stateful = true), which
+	 * helps in maintaining the data about failures, number of attempts etc for all
+	 * requests for a particular method.
+	 * 
+	 * maxAttempts attribute: It is the maximum number of attempts (including the
+	 * first failure), defaults to 3
+	 * 
+	 * openTimeout attribute: When maxAttempts() failures are reached within this
+	 * timeout, the circuit is opened automatically, preventing access to the
+	 * downstream component. This where the whole trick lies in, for example if
+	 * maxAttempts = 4, resetTimeout = 18000 (18 sec's) and openTimeout = 6000 (6
+	 * sec's). If the number of failures are reaching the maxAttempt (4) within
+	 * openTimeout (6 sec's), then the CircuitBreaker is open, will wait till
+	 * resetTimeout (18 sec's) and close the circuit.
+	 * 
+	 * resetTimeout attribute: If the circuit is open for longer than this timeout
+	 * then it resets on the next call to give the downstream component a chance to
+	 * respond again.
+	 */
 	@GetMapping("cb-service-not-running")
 	@CircuitBreaker(value = { ResourceAccessException.class, RestClientResponseException.class,
-			Exception.class }, maxAttempts = 2, resetTimeout = 8000)
+			Exception.class }, maxAttempts = 2, resetTimeout = 25000, openTimeout = 5000)
 	public ResponseEntity<Result> cbWithNoServiceRunning() {
 		log.info(" ## Start cbWithNoServiceRunning() ## ");
 		Result result = null;
-		log.info(" ## End cbWithNoServiceRunning() but resttemplate call processing ## ");
 		ResponseEntity<Result> responseEntity = restTemplate.exchange(URL_SERVICE2_SUCCESS, HttpMethod.GET, null,
 				new ParameterizedTypeReference<Result>() {
 				});
@@ -113,6 +137,7 @@ public class SpringRetryHystrixService1Controller {
 			result = new Result();
 			result.setMessage("No idea on how did i reach this block. This issue needs to be fixed");
 		}
+		log.info(" ## End cbWithNoServiceRunning() ## ");
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
 
@@ -123,6 +148,17 @@ public class SpringRetryHystrixService1Controller {
 		log.info(" ## Start retryWithNoServiceAPI() ## ");
 		log.info(" ## End retryWithNoServiceAPI() but resttemplate call processing ## ");
 		return customRestTemplate.exchange(URL_SERVICE2_NO_API, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				});
+	}
+
+	@GetMapping("cb-no-service-api")
+	@CircuitBreaker(value = { ResourceAccessException.class, RestClientResponseException.class,
+			Exception.class }, maxAttempts = 2)
+	public ResponseEntity<Result> cbWithNoServiceAPI() {
+		log.info(" ## Start cbWithNoServiceAPI() ## ");
+		log.info(" ## End cbWithNoServiceAPI() but resttemplate call processing ## ");
+		return restTemplate.exchange(URL_SERVICE2_NO_API, HttpMethod.GET, null,
 				new ParameterizedTypeReference<Result>() {
 				});
 	}
@@ -144,6 +180,29 @@ public class SpringRetryHystrixService1Controller {
 				}, params);
 	}
 
+	@GetMapping("cb-timeout-service/{timeOutMilliSec}")
+	@CircuitBreaker(value = { ResourceAccessException.class, RestClientResponseException.class,
+			Exception.class }, maxAttempts = 4)
+	public ResponseEntity<Result> cbWithTiemoutService(@PathVariable long timeOutMilliSec) {
+		log.info(" ## Start cbWithTiemoutService(@PathVariable long timeOutMilliSec) ## ");
+		Map<String, String> params = new HashMap<String, String>();
+		if (timeOutMilliSec < 0) {
+			throw new RuntimeException("Time out value should be positive number");
+		}
+		params.put("timeOutMilliSec", (new Long(timeOutMilliSec)).toString());
+		log.info(
+				" ## End cbWithTiemoutService(@PathVariable long timeOutMilliSec) but resttemplate call processing ## ");
+		/*
+		 * return customRestTemplate.exchange(URL_SERVICE2_TIMEOUT, HttpMethod.GET,
+		 * null, new ParameterizedTypeReference<Result>() { }, params);
+		 */
+		// As @CircuitBreaker never breaks on time, but breaks on maxAttempts in a given
+		// window openTimeout. So better use custom rest template for closing connection
+		return restTemplate.exchange(URL_SERVICE2_TIMEOUT, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				}, params);
+	}
+
 	@GetMapping("retry-unknown-host")
 	@Retryable(value = { ResourceAccessException.class, RestClientResponseException.class,
 			Exception.class }, maxAttempts = 2, backoff = @Backoff(delay = 2000))
@@ -151,6 +210,17 @@ public class SpringRetryHystrixService1Controller {
 		log.info(" ## Start retryWithUnknownHost() ## ");
 		log.info(" ## End retryWithUnknownHost() but resttemplate call processing ## ");
 		return customRestTemplate.exchange(URL_UNKNOWN_HOST_API, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				});
+	}
+
+	@GetMapping("cb-unknown-host")
+	@CircuitBreaker(value = { ResourceAccessException.class, RestClientResponseException.class,
+			Exception.class }, maxAttempts = 4)
+	public ResponseEntity<Result> cbWithUnknownHost() {
+		log.info(" ## Start cbWithUnknownHost() ## ");
+		log.info(" ## End cbWithUnknownHost() but resttemplate call processing ## ");
+		return restTemplate.exchange(URL_UNKNOWN_HOST_API, HttpMethod.GET, null,
 				new ParameterizedTypeReference<Result>() {
 				});
 	}
@@ -166,6 +236,17 @@ public class SpringRetryHystrixService1Controller {
 				});
 	}
 
+	@GetMapping("cb-random-exception")
+	@CircuitBreaker(value = { ResourceAccessException.class, RestClientResponseException.class,
+			Exception.class }, maxAttempts = 3)
+	public ResponseEntity<Result> cbWithRandomException() {
+		log.info(" ## Start cbWithRandomException() ## ");
+		log.info(" ## End cbWithRandomException() but resttemplate call processing ## ");
+		return restTemplate.exchange(URL_SERVICE2_RANDOM_EXCEPTION, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				});
+	}
+
 	@GetMapping("retry-exception")
 	@Retryable(value = { ResourceAccessException.class, RestClientResponseException.class,
 			Exception.class }, maxAttempts = 2, backoff = @Backoff(delay = 2000))
@@ -173,6 +254,17 @@ public class SpringRetryHystrixService1Controller {
 		log.info(" ## Start retryWithException() ## ");
 		log.info(" ## End retryWithException() but resttemplate call processing ## ");
 		return customRestTemplate.exchange(URL_SERVICE2_EXCEPTION, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				});
+	}
+
+	@GetMapping("cb-exception")
+	@CircuitBreaker(value = { ResourceAccessException.class, RestClientResponseException.class,
+			Exception.class }, maxAttempts = 4)
+	public ResponseEntity<Result> cbWithException() {
+		log.info(" ## Start cbWithException() ## ");
+		log.info(" ## End cbWithException() but resttemplate call processing ## ");
+		return restTemplate.exchange(URL_SERVICE2_EXCEPTION, HttpMethod.GET, null,
 				new ParameterizedTypeReference<Result>() {
 				});
 	}
@@ -198,7 +290,7 @@ public class SpringRetryHystrixService1Controller {
 	private ResponseEntity<Result> recoverFromResourceAccessException(ResourceAccessException resourceAccessException) {
 		log.info(" ## Start recoverFromResourceAccessException(ResourceAccessException resourceAccessException) ## ");
 		Result result = new Result();
-		resourceAccessException.printStackTrace();
+		// resourceAccessException.printStackTrace();
 		result.setMessage(resourceAccessException.getMessage());
 		result.setStatus("I/O error");
 		log.info(" ## End recoverFromResourceAccessException(ResourceAccessException resourceAccessException) ## ");
@@ -211,7 +303,7 @@ public class SpringRetryHystrixService1Controller {
 		log.info(
 				" ## Start recoverFromRestClientResponseException(RestClientResponseException restClientResponseException) ## ");
 		Result result = new Result();
-		restClientResponseException.printStackTrace();
+		// restClientResponseException.printStackTrace();
 		result.setMessage(restClientResponseException.getMessage());
 		result.setStatus(restClientResponseException.getStatusText());
 		log.info(
@@ -223,7 +315,7 @@ public class SpringRetryHystrixService1Controller {
 	private ResponseEntity<Result> recoverFromException(Exception exception) {
 		log.info(" ## Start recoverFromException(Exception exception) ## ");
 		Result result = new Result();
-		exception.printStackTrace();
+		// exception.printStackTrace();
 		result.setMessage(exception.getMessage());
 		result.setStatus("Unknown");
 		log.info(" ## End recoverFromException(Exception exception) ## ");
@@ -259,7 +351,7 @@ public class SpringRetryHystrixService1Controller {
 				}, params);
 	}
 
-	@GetMapping("test-hystrix-cb/{timeOutMilliSec}")
+	@GetMapping("test-hystrix-timeout/{timeOutMilliSec}")
 	// @formatter:off
 	/*
 	@HystrixCommand(fallbackMethod = "testHystrixCBFallback", commandProperties = {
@@ -277,7 +369,7 @@ public class SpringRetryHystrixService1Controller {
 	// Exceptions are transferred back to fallback method, without waiting for
 	// timeout, some exceptions can be ignored using attribute ignoreExceptions
 	@HystrixCommand(fallbackMethod = "testHystrixCBFallback")
-	public ResponseEntity<Result> testHystrixCircuitBreaker(@PathVariable long timeOutMilliSec) {
+	public ResponseEntity<Result> testHystrixCircuitBreakerTimeout(@PathVariable long timeOutMilliSec) {
 		log.info(" ## Start testHystrixCircuitBreaker(@PathVariable long timeOutMilliSec) ## ");
 		Map<String, String> params = new HashMap<String, String>();
 		if (timeOutMilliSec < 0) {
@@ -300,6 +392,76 @@ public class SpringRetryHystrixService1Controller {
 						+ /* HYSTRIX_TIMEOUT_VALUE */ hystrixCBTimeout + " milli seconds, where as passed time out is "
 						+ timeOutMilliSec + " milli seconds");
 		log.info(" ## End testHystrixCBFallback(long timeOutMilliSec) ## ");
+		return new ResponseEntity<>(result, HttpStatus.OK);
+	}
+
+	@GetMapping("hystrix-service-not-running")
+	@HystrixCommand(fallbackMethod = "hystrixCBFallback")
+	public ResponseEntity<Result> hystrixWithNoServiceRunning() {
+		log.info(" ## Start hystrixWithNoServiceRunning() ## ");
+		Result result = null;
+		ResponseEntity<Result> responseEntity = restTemplate.exchange(URL_SERVICE2_SUCCESS, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				});
+		if (null != responseEntity && null != responseEntity.getBody()) {
+			result = responseEntity.getBody();
+			result.setMessage("Response returned from external service-2. Please stop service-2 and test this API");
+		} else {
+			result = new Result();
+			result.setMessage("No idea on how did i reach this block. This issue needs to be fixed");
+		}
+		log.info(" ## End hystrixWithNoServiceRunning() ## ");
+		return new ResponseEntity<>(result, HttpStatus.OK);
+	}
+
+	@GetMapping("hystrix-no-service-api")
+	@HystrixCommand(fallbackMethod = "hystrixCBFallback")
+	public ResponseEntity<Result> hystrixWithNoServiceAPI() {
+		log.info(" ## Start hystrixWithNoServiceAPI() ## ");
+		log.info(" ## End hystrixWithNoServiceAPI() but resttemplate call processing ## ");
+		return restTemplate.exchange(URL_SERVICE2_NO_API, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				});
+	}
+
+	@GetMapping("hystrix-unknown-host")
+	@HystrixCommand(fallbackMethod = "hystrixCBFallback")
+	public ResponseEntity<Result> hystrixWithUnknownHost() {
+		log.info(" ## Start hystrixWithUnknownHost() ## ");
+		log.info(" ## End hystrixWithUnknownHost() but resttemplate call processing ## ");
+		return restTemplate.exchange(URL_UNKNOWN_HOST_API, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				});
+	}
+
+	@GetMapping("hystrix-random-exception")
+	@HystrixCommand(fallbackMethod = "hystrixCBFallback")
+	public ResponseEntity<Result> hystrixWithRandomException() {
+		log.info(" ## Start hystrixWithRandomException() ## ");
+		log.info(" ## End hystrixWithRandomException() but resttemplate call processing ## ");
+		return restTemplate.exchange(URL_SERVICE2_RANDOM_EXCEPTION, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				});
+	}
+
+	@GetMapping("hystrix-exception")
+	@HystrixCommand(fallbackMethod = "hystrixCBFallback")
+	public ResponseEntity<Result> hystrixWithException() {
+		log.info(" ## Start hystrixWithException() ## ");
+		log.info(" ## End hystrixWithException() but resttemplate call processing ## ");
+		return restTemplate.exchange(URL_SERVICE2_EXCEPTION, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Result>() {
+				});
+	}
+
+	@SuppressWarnings("unused")
+	private ResponseEntity<Result> hystrixCBFallback() {
+		log.info(" ## Start hystrixCBFallback() ## ");
+		Result result = new Result();
+		result.setMessage(
+				"Response returned from hystrixCBFallback method, this could be caused by exception/did not receive response from external service by configured time out "
+						+ hystrixCBTimeout + " milli seconds");
+		log.info(" ## End hystrixCBFallback() ## ");
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
 
